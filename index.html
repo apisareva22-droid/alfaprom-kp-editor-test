@@ -525,6 +525,21 @@ async function downloadPDF(){
         undefined,
         "MEDIUM"
       );
+
+      const ratingLink=pageElements[i].querySelector(".footer-rating");
+      if(ratingLink){
+        const pageRect=pageElements[i].getBoundingClientRect();
+        const ratingRect=ratingLink.getBoundingClientRect();
+        const scaleX=210/pageRect.width;
+        const scaleY=297/pageRect.height;
+        pdf.link(
+          (ratingRect.left-pageRect.left)*scaleX,
+          (ratingRect.top-pageRect.top)*scaleY,
+          ratingRect.width*scaleX,
+          ratingRect.height*scaleY,
+          {url:YANDEX_RATING_URL}
+        );
+      }
     }
 
     const filename=safeFileName(
@@ -1178,8 +1193,12 @@ async function createDocx(){
 
   const footerLeft=[
     paragraph([run("АЛЬФАПРОМ",{size:15,bold:true,color:"FFFFFF"})],{after:10}),
-    paragraph([run("Оборудование для пищевого производства и упаковки",{size:11,bold:true,color:"FFFFFF"})],{after:0,line:190}),
-    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[run("★ Яндекс 4.9 ★★★★★",{size:10,bold:true,color:"FFFFFF",underline:{type:docx.UnderlineType.SINGLE}})]})],{after:0,line:180})
+    paragraph([run("Оборудование для пищевого производства и упаковки",{size:11,bold:true,color:"FFFFFF"})],{after:0,line:190})
+  ];
+
+  const footerRating=[
+    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[run("★  Яндекс 4.9  ★★★★★",{size:14,bold:true,color:"202124"})]})],{alignment:docx.AlignmentType.CENTER,after:2}),
+    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[run("Рейтинг на Яндекс Картах",{size:8,color:"666666"})]})],{alignment:docx.AlignmentType.CENTER,after:0})
   ];
 
   const footerRight=[];
@@ -1194,18 +1213,26 @@ async function createDocx(){
 
   function makeOrangeFooterTable(){
     const FOOTER_W=PAGE_W;
-    const leftW=Math.round(FOOTER_W*.62);
-    const rightW=FOOTER_W-leftW;
+    const leftW=Math.round(FOOTER_W*.30);
+    const ratingW=Math.round(FOOTER_W*.40);
+    const rightW=FOOTER_W-leftW-ratingW;
     return new docx.Table({
       width:{size:FOOTER_W,type:docx.WidthType.DXA},
       indent:{size:-ML,type:docx.WidthType.DXA},
-      columnWidths:[leftW,rightW],
+      columnWidths:[leftW,ratingW,rightW],
       rows:[new docx.TableRow({cantSplit:true,children:[
         new docx.TableCell({
           width:{size:leftW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
           margins:{top:100,bottom:100,left:0,right:100},
           borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},left:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},right:{style:docx.BorderStyle.NONE,size:0,color:ORANGE}},
           children:footerLeft
+        }),
+        new docx.TableCell({
+          width:{size:ratingW,type:docx.WidthType.DXA},shading:{fill:"FFFFFF"},
+          verticalAlign:docx.VerticalAlign.CENTER,
+          margins:{top:100,bottom:100,left:100,right:100},
+          borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},left:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},right:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE}},
+          children:footerRating
         }),
         new docx.TableCell({
           width:{size:rightW,type:docx.WidthType.DXA},shading:{fill:ORANGE},

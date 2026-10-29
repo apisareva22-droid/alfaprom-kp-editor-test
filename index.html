@@ -624,6 +624,18 @@ async function createDocx(){
     });
   }
 
+  async function ratingBadgePng(){
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="240" viewBox="0 0 800 240"><rect x="5" y="5" width="790" height="230" rx="115" fill="#fff"/><polygon points="155,42 181,108 252,112 197,155 215,225 155,184 95,225 113,155 58,112 129,108" fill="#ffc21a" stroke="#ec9b00" stroke-width="4"/><text x="292" y="106" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#202124"><tspan fill="#e31d1c">Я</tspan>ндекс 4.9</text><text x="295" y="151" font-family="Arial,sans-serif" font-size="38" fill="#ffad00">★★★★★</text><text x="295" y="188" font-family="Arial,sans-serif" font-size="24" fill="#666">Рейтинг на Яндекс Картах</text></svg>`;
+    const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+    try{
+      const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url});
+      const canvas=document.createElement("canvas");canvas.width=800;canvas.height=240;
+      canvas.getContext("2d").drawImage(image,0,0);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+      return blobToUint8Array(blob);
+    }finally{URL.revokeObjectURL(url)}
+  }
+
   function paragraph(children=[],opts={}){
     const p=new docx.Paragraph({
       alignment:opts.alignment,
@@ -1197,8 +1209,7 @@ async function createDocx(){
   ];
 
   const footerRating=[
-    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[run("★  Яндекс 4.9  ★★★★★",{size:14,bold:true,color:"202124"})]})],{alignment:docx.AlignmentType.CENTER,after:2}),
-    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[run("Рейтинг на Яндекс Картах",{size:8,color:"666666"})]})],{alignment:docx.AlignmentType.CENTER,after:0})
+    paragraph([new docx.ImageRun({data:await ratingBadgePng(),transformation:{width:205,height:62}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})
   ];
 
   const footerRight=[];
@@ -1223,20 +1234,20 @@ async function createDocx(){
       rows:[new docx.TableRow({cantSplit:true,children:[
         new docx.TableCell({
           width:{size:leftW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
-          margins:{top:100,bottom:100,left:0,right:100},
+          margins:{top:100,bottom:100,left:240,right:120},
           borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},left:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},right:{style:docx.BorderStyle.NONE,size:0,color:ORANGE}},
           children:footerLeft
         }),
         new docx.TableCell({
-          width:{size:ratingW,type:docx.WidthType.DXA},shading:{fill:"FFFFFF"},
+          width:{size:ratingW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
           verticalAlign:docx.VerticalAlign.CENTER,
-          margins:{top:100,bottom:100,left:100,right:100},
+          margins:{top:0,bottom:0,left:0,right:0},
           borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},left:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},right:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE}},
           children:footerRating
         }),
         new docx.TableCell({
           width:{size:rightW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
-          margins:{top:100,bottom:100,left:100,right:0},
+          margins:{top:100,bottom:100,left:120,right:240},
           borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},left:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},right:{style:docx.BorderStyle.NONE,size:0,color:ORANGE}},
           children:footerRight
         })
@@ -1425,7 +1436,7 @@ async function downloadVisualDOCX(){
   }catch(e){console.error(e);alert("Не удалось сформировать DOCX.\n\n"+(e.message||e))}
   finally{b.disabled=false;b.textContent="Скачать DOCX"}
 }
-document.getElementById("downloadDocxBtn").onclick=downloadVisualDOCX;
+document.getElementById("downloadDocxBtn").onclick=downloadDOCX;
 const renderWithNativeAlignmentIcons=renderProductsEditor;
 renderProductsEditor=function(){let adjusted=false;state.products.forEach(p=>(p.photoIds||[]).forEach(id=>{const pos=getPhotoPosition(p,id),size=getPhotoSize(p,id),center=(PHOTO_CANVAS_W_MM-size)/2;if(Math.abs(pos.x-center)<=3&&pos.x!==center){setPhotoPosition(p,id,center,pos.y);adjusted=true}}));if(adjusted)saveState();renderWithNativeAlignmentIcons();const icon={justifyLeft:"align-left",justifyCenter:"align-center",justifyRight:"align-right"};document.querySelectorAll("[data-rich]").forEach(button=>{const cls=icon[button.dataset.rich];if(cls)button.innerHTML=`<span class="align-icon ${cls}" aria-hidden="true"><i></i><i></i><i></i></span>`})};
 const baseSyncPhotoCropBorder=syncPhotoCropBorder;

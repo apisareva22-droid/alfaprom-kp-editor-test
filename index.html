@@ -150,10 +150,11 @@ function applyPhotoCropPreview(p,id,container,img){
  container.style.overflow="hidden";
  container.style.boxSizing="border-box";
  const window=container.querySelector(".photo-crop-window");
- img.style.width="100%";
- img.style.height="100%";
- img.style.left="0";
- img.style.top="0";
+ const size=getPhotoSize(p,id);
+ img.style.width=applied?size+"mm":"100%";
+ img.style.height=applied?size+"mm":"100%";
+ img.style.left=applied?(-size*left/100)+"mm":"0";
+ img.style.top=applied?(-size*top/100)+"mm":"0";
  if(window){
    window.style.position="absolute";
    window.style.overflow="hidden";
@@ -186,11 +187,11 @@ function syncPhotoEditorFrame(p,item,id){
  if(label)label.textContent=applied?("Размер в КП: "+Math.round(w*10)/10+" × "+Math.round(h*10)/10+" мм"):("Размер в КП: "+size+" × "+size+" мм");
  if(preview){
    if(applied){
-     preview.style.width=size+"mm";
-     preview.style.height=size+"mm";
-     preview.style.left=(-size*left/100)+"mm";
-     preview.style.top=(-size*top/100)+"mm";
-     preview.style.position="absolute";
+     preview.style.width=w+"mm";
+     preview.style.height=h+"mm";
+     preview.style.left="0";
+     preview.style.top="0";
+     preview.style.position="relative";
      preview.classList.remove("photo-crop-editing");
      preview.classList.add("photo-crop-applied")
    }else{
@@ -1354,6 +1355,8 @@ const renderWithNativeAlignmentIcons=renderProductsEditor;
 renderProductsEditor=function(){let adjusted=false;state.products.forEach(p=>(p.photoIds||[]).forEach(id=>{const pos=getPhotoPosition(p,id),size=getPhotoSize(p,id),center=(PHOTO_CANVAS_W_MM-size)/2;if(Math.abs(pos.x-center)<=3&&pos.x!==center){setPhotoPosition(p,id,center,pos.y);adjusted=true}}));if(adjusted)saveState();renderWithNativeAlignmentIcons();const icon={justifyLeft:"align-left",justifyCenter:"align-center",justifyRight:"align-right"};document.querySelectorAll("[data-rich]").forEach(button=>{const cls=icon[button.dataset.rich];if(cls)button.innerHTML=`<span class="align-icon ${cls}" aria-hidden="true"><i></i><i></i><i></i></span>`})};
 const baseSyncPhotoCropBorder=syncPhotoCropBorder;
 syncPhotoCropBorder=function(preview){baseSyncPhotoCropBorder(preview);const editing=preview.classList.contains("photo-crop-editing");const crop=getPhotoCrop(state.products.find(p=>(p.photoIds||[]).includes(preview.closest(".photo-editor-item")?.dataset.photoId))||{},preview.closest(".photo-editor-item")?.dataset.photoId);const values={top:Math.max(0,Math.min(45,Number(crop.top)||0)),bottom:Math.max(0,Math.min(45,Number(crop.bottom)||0)),left:Math.max(0,Math.min(45,Number(crop.left)||0)),right:Math.max(0,Math.min(45,Number(crop.right)||0))};const ensure=side=>{let el=preview.querySelector(`.photo-crop-mask-${side}`);if(!el){el=document.createElement("div");el.className=`photo-crop-mask photo-crop-mask-${side}`;preview.appendChild(el)}return el};const top=ensure("top"),bottom=ensure("bottom"),left=ensure("left"),right=ensure("right"),middle=Math.max(0,100-values.top-values.bottom);Object.assign(top.style,{left:"0",top:"0",width:"100%",height:values.top+"%",display:editing?"block":"none"});Object.assign(bottom.style,{left:"0",bottom:"0",width:"100%",height:values.bottom+"%",display:editing?"block":"none"});Object.assign(left.style,{left:"0",top:values.top+"%",width:values.left+"%",height:middle+"%",display:editing?"block":"none"});Object.assign(right.style,{right:"0",top:values.top+"%",width:values.right+"%",height:middle+"%",display:editing?"block":"none"})};
+const baseUpdatePhotoCropHandles=updatePhotoCropHandles;
+updatePhotoCropHandles=function(p,id,preview){baseUpdatePhotoCropHandles(p,id,preview);if(!getPhotoCrop(p,id).applied)return;const left=preview.querySelector('[data-crop-handle="left"]'),right=preview.querySelector('[data-crop-handle="right"]'),top=preview.querySelector('[data-crop-handle="top"]'),bottom=preview.querySelector('[data-crop-handle="bottom"]');if(left)left.style.left="0";if(right)right.style.left="100%";if(top)top.style.top="0";if(bottom)bottom.style.top="100%"};
 </script>
 </body>
 </html>

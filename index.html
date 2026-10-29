@@ -1204,23 +1204,23 @@ async function createDocx(){
   // =========================================================
 
   const footerLeft=[
-    paragraph([run("АЛЬФАПРОМ",{size:15,bold:true,color:"FFFFFF"})],{after:10}),
-    paragraph([run("Оборудование для пищевого производства и упаковки",{size:11,bold:true,color:"FFFFFF"})],{after:0,line:190})
+    paragraph([run("АЛЬФАПРОМ",{size:26,bold:true,color:"FFFFFF"})],{after:18,line:220}),
+    paragraph([run("Оборудование для пищевого производства и упаковки",{size:18,bold:true,color:"FFFFFF"})],{after:0,line:210})
   ];
 
   const footerRating=[
-    paragraph([new docx.ImageRun({data:await ratingBadgePng(),transformation:{width:205,height:62}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})
+    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:205,height:62}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})
   ];
 
   const footerRight=[];
   if(state.managerName.trim()){
-    footerRight.push(paragraph([run(state.managerName,{size:12,bold:true,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:5}));
+    footerRight.push(paragraph([run(state.managerName,{size:20,bold:true,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:8,line:220}));
   }
   if(state.managerPhone.trim()){
-    footerRight.push(paragraph([run(state.managerPhone,{size:11,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:3}));
+    footerRight.push(paragraph([run(state.managerPhone,{size:18,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:5,line:210}));
   }
-  footerRight.push(paragraph([run("8 (800) 200-29-23",{size:11,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:3}));
-  footerRight.push(paragraph([run("alfaprom.org",{size:11,bold:true,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:0}));
+  footerRight.push(paragraph([run("8 (800) 200-29-23",{size:18,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:5,line:210}));
+  footerRight.push(paragraph([run("alfaprom.org",{size:18,bold:true,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:0,line:210}));
 
   function makeOrangeFooterTable(){
     const FOOTER_W=PAGE_W;
@@ -1231,7 +1231,7 @@ async function createDocx(){
       width:{size:FOOTER_W,type:docx.WidthType.DXA},
       indent:{size:-ML,type:docx.WidthType.DXA},
       columnWidths:[leftW,ratingW,rightW],
-      rows:[new docx.TableRow({cantSplit:true,children:[
+      rows:[new docx.TableRow({cantSplit:true,height:{value:1100,rule:docx.HeightRule.ATLEAST},children:[
         new docx.TableCell({
           width:{size:leftW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
           margins:{top:100,bottom:100,left:240,right:120},

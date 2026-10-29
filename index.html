@@ -1391,51 +1391,8 @@ const baseBlockHtml=blockHtml;
 blockHtml=function(p,index,photos){return baseBlockHtml(p,index,photos).flatMap(block=>{if(block&&typeof block==="object"&&block.type==="description")return descriptionHtml(p.description)?[`<div class="kp-description">${descriptionHtml(p.description)}</div>`]:[];if(typeof block==="string"&&block.includes('class="price-block"'))return[block,`<div class="price-vat">${p.vatMode==="without"?"Цена без НДС":"Цена с НДС"}</div>`];return[block]})};
 document.getElementById("downloadPdfBtn").onclick=downloadPDF;document.getElementById("downloadDocxBtn").onclick=downloadDOCX;init();
 
-// Word по-разному рассчитывает таблицы и колонтитулы. Для точного совпадения
-// с макетом КП экспортируем каждую A4-страницу единым изображением.
-async function createVisualDocx(){
-  if(!window.docx)throw new Error("Модуль DOCX ещё загружается. Повторите через пару секунд.");
-  const pages=await buildAllPages();
-  const root=document.createElement("div");
-  root.className="pdf-render-root";
-  root.style.cssText="position:fixed;left:0;top:0;width:210mm;visibility:visible;z-index:-1";
-  root.innerHTML=pages.join("");
-  document.body.appendChild(root);
-  try{
-    await new Promise(r=>requestAnimationFrame(r));
-    await new Promise(r=>setTimeout(r,100));
-    const pageElements=[...root.querySelectorAll(".kp-page")];
-    const sections=[];
-    for(let i=0;i<pageElements.length;i++){
-      const canvas=await window.html2canvas(pageElements[i],{scale:2,useCORS:true,backgroundColor:"#fff",logging:false});
-      const png=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
-      const image=new window.docx.ImageRun({
-        data:await blobToUint8Array(png),
-        transformation:{width:794,height:1123}
-      });
-      sections.push({
-        properties:{
-          ...(i?{type:window.docx.SectionType.NEXT_PAGE}:{}),
-          page:{size:{width:11906,height:16838},margin:{top:0,right:0,bottom:0,left:0,header:0,footer:0}}
-        },
-        children:[new window.docx.Paragraph({spacing:{before:0,after:0,line:1},children:[image]})]
-      });
-    }
-    return window.docx.Packer.toBlob(new window.docx.Document({sections}));
-  }finally{root.remove()}
-}
-
-async function downloadVisualDOCX(){
-  const b=document.getElementById("downloadDocxBtn");
-  b.disabled=true;b.textContent="Формирование DOCX...";
-  try{
-    const blob=await createVisualDocx();
-    const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download=safeFileName(state.products[0]?.productName)+".docx";
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }catch(e){console.error(e);alert("Не удалось сформировать DOCX.\n\n"+(e.message||e))}
-  finally{b.disabled=false;b.textContent="Скачать DOCX"}
-}
+// DOCX формируется только нативными текстом и таблицами: так Word сохраняет
+// редактируемость документа и корректно открывает файл.
 document.getElementById("downloadDocxBtn").onclick=downloadDOCX;
 const renderWithNativeAlignmentIcons=renderProductsEditor;
 renderProductsEditor=function(){let adjusted=false;state.products.forEach(p=>(p.photoIds||[]).forEach(id=>{const pos=getPhotoPosition(p,id),size=getPhotoSize(p,id),center=(PHOTO_CANVAS_W_MM-size)/2;if(Math.abs(pos.x-center)<=3&&pos.x!==center){setPhotoPosition(p,id,center,pos.y);adjusted=true}}));if(adjusted)saveState();renderWithNativeAlignmentIcons();const icon={justifyLeft:"align-left",justifyCenter:"align-center",justifyRight:"align-right"};document.querySelectorAll("[data-rich]").forEach(button=>{const cls=icon[button.dataset.rich];if(cls)button.innerHTML=`<span class="align-icon ${cls}" aria-hidden="true"><i></i><i></i><i></i></span>`})};

@@ -1402,13 +1402,12 @@ async function createVisualDocx(){
         data:await blobToUint8Array(png),
         transformation:{width:794,height:1123}
       });
-      const linkedImage=new window.docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[image]});
       sections.push({
         properties:{
           ...(i?{type:window.docx.SectionType.NEXT_PAGE}:{}),
           page:{size:{width:11906,height:16838},margin:{top:0,right:0,bottom:0,left:0,header:0,footer:0}}
         },
-        children:[new window.docx.Paragraph({spacing:{before:0,after:0,line:1},children:[linkedImage]})]
+        children:[new window.docx.Paragraph({spacing:{before:0,after:0,line:1},children:[image]})]
       });
     }
     return window.docx.Packer.toBlob(new window.docx.Document({sections}));

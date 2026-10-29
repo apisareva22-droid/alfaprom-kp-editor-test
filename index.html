@@ -51,6 +51,10 @@
   padding-top:5mm;
 }.advantage:nth-child(5){grid-column:4 / span 2}
 .kp-footer{flex:none;height:18mm;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8mm;padding:3.5mm 15mm}.footer-left{font-size:9px;font-weight:700;line-height:1.3}.footer-right{text-align:right;font-size:9px;line-height:1.35}.footer-manager{font-weight:800}.page-continuation{font-size:9px;color:#777;margin-bottom:2mm}
+/* редактор и подвал */
+.photo-editor-grid{background-image:linear-gradient(to right,rgba(255,129,0,.18) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,129,0,.18) 1px,transparent 1px);background-size:5mm 5mm;border:1px solid #ffe2c2;border-radius:8px}
+.kp-footer{min-height:18mm;height:auto;gap:6mm}.footer-left,.footer-right{flex:1}.footer-rating{display:flex;align-items:center;justify-content:center;gap:2.2mm;min-width:48mm;padding:1.4mm 2.2mm;border-radius:7mm;background:#fff;color:#202124;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,.18)}.footer-rating:hover{transform:translateY(-.3mm)}.rating-star{font-size:10mm;line-height:1;color:#ffbf16;text-shadow:0 1px 0 #d98f00}.rating-copy{display:flex;flex-direction:column;align-items:flex-start;line-height:1}.rating-yandex{font-size:10px;font-weight:900;letter-spacing:-.2px}.rating-yandex b{color:#e31d1c}.rating-score{font-size:14px;font-weight:900}.rating-stars{font-size:8px;letter-spacing:.4px;color:#ffad00}.rating-caption{font-size:6px;color:#666;margin-top:1px}.rich-toolbar{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 7px}.rich-toolbar button{min-width:30px;border:1px solid #d3d6da;background:#fff;border-radius:6px;padding:5px 7px;font-weight:700}.rich-toolbar button:hover{border-color:var(--orange);color:#c86400}.rich-editor{min-height:110px;width:100%;border:1px solid #cfd3d8;border-radius:8px;padding:10px 11px;background:#fff;line-height:1.45;outline:none}.rich-editor:focus{border-color:var(--orange)}.rich-editor:empty:before{content:attr(data-placeholder);color:#73777d;pointer-events:none}.kp-description{white-space:normal}.kp-description p{margin:0 0 2.5mm}.kp-description p:last-child{margin-bottom:0}.price-area{break-inside:avoid;page-break-inside:avoid}
+.price-vat{font-size:10.5px;color:#666;font-weight:700;margin:-1mm 0 1.5mm}
 /* measurement / PDF */
 #pdfMeasure{position:absolute;left:-100000px;top:0;width:210mm;visibility:hidden;pointer-events:none}.pdf-render-root{width:210mm;background:#fff}.pdf-render-root .kp-page{box-shadow:none}.pdf-render-root .preview-page-shell{display:block!important}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.editor{border-right:0}.preview-side{min-height:800px}.two-cols{grid-template-columns:1fr}.topbar{height:auto;min-height:62px;padding:10px 14px}.topbar-title{font-size:15px}}
@@ -317,7 +321,7 @@ async function paginateProduct(p,index){
         '<div class="measureBlocks"></div>'+
       '</div>'+
       '<div class="kp-bottom"><div class="kp-footer-stack">'+
-        (firstPage?advantagesHtml():"")+
+        advantagesHtml()+
         footerHtml()+
       '</div></div>';
     document.body.appendChild(page);
@@ -390,6 +394,9 @@ async function paginateProduct(p,index){
         const available=pageIndex===0?firstAvailable:nextAvailable;
         const room=Math.max(0,available-currentHeight);
         let count=await fitSpecsRows(remaining,room);
+        // Не оставляем на странице одинокую строку таблицы, если следующая
+        // страница может начать таблицу аккуратным блоком.
+        if(count===1&&remaining.length>1&&current.length){pushPage();continue}
         if(count<1){
           if(current.length){pushPage();continue}
           count=await fitSpecsRows(remaining,available);
@@ -1062,6 +1069,12 @@ async function createDocx(){
       return;
     }
 
+    const vat=host.querySelector(".price-vat");
+    if(vat){
+      children.push(paragraph([run(vat.textContent||"",{size:14,bold:true,color:MUTED})],{after:90,line:220}));
+      return;
+    }
+
     const comment=host.querySelector(".price-comment");
     if(comment){
       children.push(
@@ -1139,7 +1152,7 @@ async function createDocx(){
         const contentRoot=host.querySelector(".kp-content")||host;
         const contentNodes=[
           ...contentRoot.querySelectorAll(
-            ".kp-description, .specs-table, .kp-note, .video-button, .price-block, .availability, .price-comment"
+            ".kp-description, .specs-table, .kp-note, .video-button, .price-block, .price-vat, .availability, .price-comment"
           )
         ];
 
@@ -1162,7 +1175,8 @@ async function createDocx(){
 
   const footerLeft=[
     paragraph([run("АЛЬФАПРОМ",{size:15,bold:true,color:"FFFFFF"})],{after:10}),
-    paragraph([run("Оборудование для пищевого производства и упаковки",{size:11,bold:true,color:"FFFFFF"})],{after:0,line:190})
+    paragraph([run("Оборудование для пищевого производства и упаковки",{size:11,bold:true,color:"FFFFFF"})],{after:0,line:190}),
+    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[run("★ Яндекс 4.9 ★★★★★",{size:10,bold:true,color:"FFFFFF",underline:{type:docx.UnderlineType.SINGLE}})]})],{after:0,line:180})
   ];
 
   const footerRight=[];
@@ -1176,10 +1190,12 @@ async function createDocx(){
   footerRight.push(paragraph([run("alfaprom.org",{size:11,bold:true,color:"FFFFFF"})],{alignment:docx.AlignmentType.RIGHT,after:0}));
 
   function makeOrangeFooterTable(){
-    const leftW=Math.round(CONTENT_W*.62);
-    const rightW=CONTENT_W-leftW;
+    const FOOTER_W=PAGE_W;
+    const leftW=Math.round(FOOTER_W*.62);
+    const rightW=FOOTER_W-leftW;
     return new docx.Table({
-      width:{size:CONTENT_W,type:docx.WidthType.DXA},
+      width:{size:FOOTER_W,type:docx.WidthType.DXA},
+      indent:{size:-ML,type:docx.WidthType.DXA},
       columnWidths:[leftW,rightW],
       rows:[new docx.TableRow({cantSplit:true,children:[
         new docx.TableCell({
@@ -1322,6 +1338,16 @@ async function downloadDOCX(){
 
   }
 }async function init(){try{await openDB()}catch(e){console.error("IndexedDB error",e)}loadState();managerName.value=state.managerName;managerPhone.value=state.managerPhone;renderProductsEditor();await renderPreview();requestAnimationFrame(fitPreviewPages)}
+// Дополнения редактора: новые поля сохраняются вместе с текущим КП.
+const YANDEX_RATING_URL="https://yandex.ru/maps/?text=%D0%90%D0%9B%D0%AC%D0%A4%D0%90%D0%9F%D0%A0%D0%9E%D0%9C";
+function createProduct(){return{id:"product_"+Date.now()+"_"+Math.random().toString(36).slice(2),productName:"",description:"",note:"",price:"",discountPrice:"",currency:"RUB",vatMode:"with",status:"available",priceComment:"",specsText:"",videoUrl:"",photoIds:[],photoSizes:{},photoPositions:{},photoCrops:{}}}
+function setPhotoPosition(p,id,x,y){const size=getPhotoSize(p,id),maxX=Math.max(0,PHOTO_CANVAS_W_MM-size),snap=v=>Math.round(v/5)*5;ensurePhotoPositions(p);p.photoPositions[id]={x:Math.max(0,Math.min(maxX,snap(Number(x)||0))),y:Math.max(0,snap(Number(y)||0))}}
+function descriptionHtml(value){const raw=String(value||"");if(!raw)return"";if(!/<[a-z][\s\S]*>/i.test(raw))return"<p>"+escapeHtml(raw).replace(/\r?\n/g,"<br>")+"</p>";const host=document.createElement("div");host.innerHTML=raw;const allowed=new Set(["P","DIV","BR","B","STRONG","I","EM","U","S","STRIKE"]);host.querySelectorAll("*").forEach(el=>{if(!allowed.has(el.tagName)){el.replaceWith(...el.childNodes);return}const align=el.style.textAlign;[...el.attributes].forEach(a=>el.removeAttribute(a.name));if(align&&["left","right","center"].includes(align))el.style.textAlign=align});return host.innerHTML}
+function footerHtml(){return`<div class="kp-footer"><div class="footer-left">АЛЬФАПРОМ<br>Оборудование для пищевого производства и упаковки</div><a class="footer-rating" href="${YANDEX_RATING_URL}" target="_blank" rel="noopener" title="Посмотреть рейтинг на Яндекс Картах"><span class="rating-star">★</span><span class="rating-copy"><span class="rating-yandex"><b>Я</b>ндекс <span class="rating-score">4.9</span></span><span class="rating-stars">★★★★★</span><span class="rating-caption">Рейтинг на Яндекс Картах</span></span></a><div class="footer-right">${state.managerName.trim()?`<div class="footer-manager">${escapeHtml(state.managerName)}</div>`:""}${state.managerPhone.trim()?`<div>${escapeHtml(state.managerPhone)}</div>`:""}<div>8 (800) 200-29-23</div><div>alfaprom.org</div></div></div>`}
+const baseRenderProductsEditor=renderProductsEditor;
+renderProductsEditor=function(){baseRenderProductsEditor();document.querySelectorAll(".product-editor-card").forEach(card=>{const p=state.products.find(x=>x.id===card.dataset.productId);if(!p)return;p.vatMode=p.vatMode==="without"?"without":"with";const oldDescription=card.querySelector('textarea[data-field="description"]');if(oldDescription){const field=oldDescription.closest(".field");field.innerHTML=`<label>Описание</label><div class="rich-toolbar" aria-label="Форматирование описания"><button type="button" data-rich="bold" title="Жирный"><b>Ж</b></button><button type="button" data-rich="italic" title="Курсив"><i>К</i></button><button type="button" data-rich="underline" title="Подчёркнутый"><u>Ч</u></button><button type="button" data-rich="strikeThrough" title="Зачёркнутый"><s>З</s></button><button type="button" data-rich="justifyLeft" title="По левому краю">≡</button><button type="button" data-rich="justifyCenter" title="По центру">≡</button><button type="button" data-rich="justifyRight" title="По правому краю">≡</button></div><div class="rich-editor" contenteditable="true" data-rich-editor="${p.id}" data-placeholder="Описание оборудования..."></div>`;const editor=field.querySelector(".rich-editor");editor.innerHTML=descriptionHtml(p.description);const sync=()=>{p.description=descriptionHtml(editor.innerHTML);saveState();renderPreview()};editor.oninput=sync;editor.onpaste=e=>{e.preventDefault();document.execCommand("insertText",false,e.clipboardData.getData("text/plain"));sync()};field.querySelectorAll("[data-rich]").forEach(button=>button.onclick=()=>{editor.focus();document.execCommand(button.dataset.rich,false,null);sync()})}const comment=card.querySelector('[data-field="priceComment"]')?.closest(".field");if(comment&&!card.querySelector("[data-vat-mode]")){comment.insertAdjacentHTML("beforebegin",`<div class="field"><label>Налогообложение</label><div class="status-buttons"><button type="button" class="status-button ${p.vatMode==="with"?"active":""}" data-vat-mode="with">С НДС</button><button type="button" class="status-button ${p.vatMode==="without"?"active":""}" data-vat-mode="without">Без НДС</button></div></div>`);card.querySelectorAll("[data-vat-mode]").forEach(button=>button.onclick=()=>{p.vatMode=button.dataset.vatMode;saveState();renderProductsEditor();renderPreview()})}})};
+const baseBlockHtml=blockHtml;
+blockHtml=function(p,index,photos){return baseBlockHtml(p,index,photos).flatMap(block=>{if(block&&typeof block==="object"&&block.type==="description")return descriptionHtml(p.description)?[`<div class="kp-description">${descriptionHtml(p.description)}</div>`]:[];if(typeof block==="string"&&block.includes('class="price-block"'))return[block,`<div class="price-vat">${p.vatMode==="without"?"Цена без НДС":"Цена с НДС"}</div>`];return[block]})};
 document.getElementById("downloadPdfBtn").onclick=downloadPDF;document.getElementById("downloadDocxBtn").onclick=downloadDOCX;init();
 </script>
 </body>

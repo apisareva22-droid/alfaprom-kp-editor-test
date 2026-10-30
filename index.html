@@ -932,17 +932,17 @@ async function createDocx(){
     const words=safe.split(/\s+/);const lines=[];let line="";
     for(const word of words){const next=(line?line+" ":"")+word;if(next.length>31&&line){lines.push(line);line=word}else line=next;}
     if(line)lines.push(line);
-    const textRows=lines.slice(0,3).map((x,index)=>'<text x="320" y="'+(78+index*32)+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#202124">'+x+'</text>').join("");
-    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="640" height="170" viewBox="0 0 640 170"><rect x="3" y="3" width="634" height="164" rx="25" fill="#fff" stroke="#e0e3e7" stroke-width="3"/><circle cx="38" cy="34" r="17" fill="#fff" stroke="#ff8100" stroke-width="3"/><text x="38" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#ff8100">✓</text>'+textRows+'</svg>';
+    const textRows=lines.slice(0,3).map((x,index)=>'<text x="320" y="'+(88+index*32)+'" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#202124">'+x+'</text>').join("");
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="640" height="196" viewBox="0 0 640 196"><rect x="3" y="13" width="634" height="170" rx="25" fill="#fff" stroke="#e0e3e7" stroke-width="3"/><circle cx="38" cy="44" r="17" fill="#fff" stroke="#ff8100" stroke-width="3"/><text x="38" y="52" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#ff8100">✓</text>'+textRows+'</svg>';
     const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
-    try{const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url});const canvas=document.createElement("canvas");canvas.width=640;canvas.height=170;canvas.getContext("2d").drawImage(image,0,0);const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));return blobToUint8Array(blob)}finally{URL.revokeObjectURL(url)}
+    try{const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url});const canvas=document.createElement("canvas");canvas.width=640;canvas.height=196;canvas.getContext("2d").drawImage(image,0,0);const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));return blobToUint8Array(blob)}finally{URL.revokeObjectURL(url)}
   }
 
   async function addDocxAdvantages(){
     children.push(paragraph([run("━━━━━━━━",{size:19,bold:true,color:ORANGE}),run("   Почему мы?   ",{size:24,bold:true}),run("━━━━━━━━",{size:19,bold:true,color:ORANGE})],{alignment:docx.AlignmentType.CENTER,before:80,after:115,keepLines:true,keepNext:true}));
     const adv=DEFAULT_ADVANTAGES||[];
     const noBorder={top:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"},bottom:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"},left:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"},right:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"}};
-    const card=async(text,width)=>new docx.TableCell({width:{size:width,type:docx.WidthType.DXA},borders:noBorder,margins:{top:0,bottom:0,left:0,right:0},children:[paragraph([new docx.ImageRun({data:await advantageCardPng(text),type:"png",transformation:{width:215,height:57}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})]});
+    const card=async(text,width)=>new docx.TableCell({width:{size:width,type:docx.WidthType.DXA},borders:noBorder,margins:{top:0,bottom:0,left:0,right:0},children:[paragraph([new docx.ImageRun({data:await advantageCardPng(text),type:"png",transformation:{width:215,height:66}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})]});
     const gap=(width)=>new docx.TableCell({width:{size:width,type:docx.WidthType.DXA},borders:noBorder,children:[paragraph([],{after:0,line:18})]});
     const gapW=180,cardW=Math.floor((CONTENT_W-gapW*2)/3);
     children.push(new docx.Table({width:{size:CONTENT_W,type:docx.WidthType.DXA},columnWidths:[cardW,gapW,cardW,gapW,CONTENT_W-cardW*2-gapW*2],rows:[new docx.TableRow({cantSplit:true,children:[await card(adv[0]||"",cardW),gap(gapW),await card(adv[1]||"",cardW),gap(gapW),await card(adv[2]||"",CONTENT_W-cardW*2-gapW*2)]})],borders:{top:noBorder.top,bottom:noBorder.bottom,left:noBorder.left,right:noBorder.right,insideHorizontal:noBorder.top,insideVertical:noBorder.left}}));
@@ -1149,7 +1149,7 @@ async function createDocx(){
   ];
 
   const footerRating=[
-    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:205,height:66}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})
+    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:192,height:60}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})
   ];
 
   const footerRight=[];
@@ -1164,14 +1164,14 @@ async function createDocx(){
 
   function makeOrangeFooterTable(){
     const FOOTER_W=PAGE_W;
-    const leftW=Math.round(FOOTER_W*.30);
+    const leftW=Math.round(FOOTER_W*.32);
     const ratingW=Math.round(FOOTER_W*.40);
     const rightW=FOOTER_W-leftW-ratingW;
     return new docx.Table({
       width:{size:FOOTER_W,type:docx.WidthType.DXA},
       indent:{size:-ML,type:docx.WidthType.DXA},
       columnWidths:[leftW,ratingW,rightW],
-      rows:[new docx.TableRow({cantSplit:true,height:{value:1650,rule:docx.HeightRule.ATLEAST},children:[
+      rows:[new docx.TableRow({cantSplit:true,height:{value:1250,rule:docx.HeightRule.ATLEAST},children:[
         new docx.TableCell({
           width:{size:leftW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
           margins:{top:100,bottom:100,left:240,right:120},

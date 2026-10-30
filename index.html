@@ -1149,7 +1149,7 @@ async function createDocx(){
   ];
 
   const footerRating=[
-    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",link:YANDEX_RATING_URL,transformation:{width:180,height:54}})],{alignment:docx.AlignmentType.CENTER,after:0})
+    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[new docx.ImageRun({data:await ratingBadgePng(),type:"png",link:YANDEX_RATING_URL,transformation:{width:180,height:54}})]})],{alignment:docx.AlignmentType.CENTER,after:0})
   ];
 
   const footerRight=[];

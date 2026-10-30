@@ -942,7 +942,7 @@ async function createDocx(){
     children.push(paragraph([run("━━━━━━━━",{size:19,bold:true,color:ORANGE}),run("   Почему мы?   ",{size:24,bold:true}),run("━━━━━━━━",{size:19,bold:true,color:ORANGE})],{alignment:docx.AlignmentType.CENTER,before:80,after:115,keepLines:true,keepNext:true}));
     const adv=DEFAULT_ADVANTAGES||[];
     const noBorder={top:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"},bottom:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"},left:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"},right:{style:docx.BorderStyle.NONE,size:0,color:"FFFFFF"}};
-    const card=async(text,width)=>new docx.TableCell({width:{size:width,type:docx.WidthType.DXA},borders:noBorder,margins:{top:0,bottom:0,left:0,right:0},children:[paragraph([new docx.ImageRun({data:await advantageCardPng(text),type:"png",transformation:{width:215,height:66}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})]});
+    const card=async(text,width)=>new docx.TableCell({width:{size:width,type:docx.WidthType.DXA},borders:noBorder,margins:{top:0,bottom:0,left:0,right:0},children:[paragraph([new docx.ImageRun({data:await advantageCardPng(text),type:"png",transformation:{width:215,height:66}})],{alignment:docx.AlignmentType.CENTER,after:0})]});
     const gap=(width)=>new docx.TableCell({width:{size:width,type:docx.WidthType.DXA},borders:noBorder,children:[paragraph([],{after:0,line:18})]});
     const gapW=180,cardW=Math.floor((CONTENT_W-gapW*2)/3);
     children.push(new docx.Table({width:{size:CONTENT_W,type:docx.WidthType.DXA},columnWidths:[cardW,gapW,cardW,gapW,CONTENT_W-cardW*2-gapW*2],rows:[new docx.TableRow({cantSplit:true,children:[await card(adv[0]||"",cardW),gap(gapW),await card(adv[1]||"",cardW),gap(gapW),await card(adv[2]||"",CONTENT_W-cardW*2-gapW*2)]})],borders:{top:noBorder.top,bottom:noBorder.bottom,left:noBorder.left,right:noBorder.right,insideHorizontal:noBorder.top,insideVertical:noBorder.left}}));
@@ -1149,7 +1149,7 @@ async function createDocx(){
   ];
 
   const footerRating=[
-    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:192,height:60}})],{alignment:docx.AlignmentType.CENTER,after:0,line:1})
+    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:180,height:54}})],{alignment:docx.AlignmentType.CENTER,after:0})
   ];
 
   const footerRight=[];
@@ -1164,17 +1164,17 @@ async function createDocx(){
 
   function makeOrangeFooterTable(){
     const FOOTER_W=PAGE_W;
-    const leftW=Math.round(FOOTER_W*.32);
-    const ratingW=Math.round(FOOTER_W*.40);
+    const leftW=Math.round(FOOTER_W*.35);
+    const ratingW=Math.round(FOOTER_W*.38);
     const rightW=FOOTER_W-leftW-ratingW;
     return new docx.Table({
       width:{size:FOOTER_W,type:docx.WidthType.DXA},
       indent:{size:-ML,type:docx.WidthType.DXA},
       columnWidths:[leftW,ratingW,rightW],
-      rows:[new docx.TableRow({cantSplit:true,height:{value:1250,rule:docx.HeightRule.ATLEAST},children:[
+      rows:[new docx.TableRow({cantSplit:true,height:{value:1050,rule:docx.HeightRule.ATLEAST},children:[
         new docx.TableCell({
           width:{size:leftW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
-          margins:{top:100,bottom:100,left:240,right:120},
+          margins:{top:60,bottom:60,left:240,right:120},
           borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},left:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},right:{style:docx.BorderStyle.NONE,size:0,color:ORANGE}},
           children:footerLeft
         }),
@@ -1187,7 +1187,7 @@ async function createDocx(){
         }),
         new docx.TableCell({
           width:{size:rightW,type:docx.WidthType.DXA},shading:{fill:ORANGE},
-          margins:{top:100,bottom:100,left:120,right:240},
+          margins:{top:60,bottom:60,left:120,right:240},
           borders:{top:{style:docx.BorderStyle.SINGLE,size:10,color:ORANGE},bottom:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},left:{style:docx.BorderStyle.NONE,size:0,color:ORANGE},right:{style:docx.BorderStyle.NONE,size:0,color:ORANGE}},
           children:footerRight
         })

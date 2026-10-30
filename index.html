@@ -72,7 +72,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script type="module">
   import * as docx from "https://cdn.jsdelivr.net/npm/docx@9.5.1/+esm";
   window.docx = docx;
@@ -1150,7 +1149,11 @@ async function createDocx(){
   ];
 
   const footerRating=[
-    paragraph([new docx.ExternalHyperlink({link:YANDEX_RATING_URL,children:[new docx.ImageRun({data:await ratingBadgePng(),type:"png",link:YANDEX_RATING_URL,transformation:{width:180,height:54}})]})],{alignment:docx.AlignmentType.CENTER,after:0})
+    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:180,height:54}})],{alignment:docx.AlignmentType.CENTER,after:0}),
+    paragraph([new docx.ExternalHyperlink({
+      link:YANDEX_RATING_URL,
+      children:[run("Открыть рейтинг на Яндекс Картах",{size:11,color:"666666",underline:{type:docx.UnderlineType.SINGLE}})]
+    })],{alignment:docx.AlignmentType.CENTER,after:0,line:150})
   ];
 
   const footerRight=[];
@@ -1276,32 +1279,6 @@ async function createDocx(){
 }
 
 
-async function addRatingImageHyperlink(docxBlob){
-  if(!window.JSZip)return docxBlob;
-  const zip=await window.JSZip.loadAsync(docxBlob);
-  const footerPaths=Object.keys(zip.files).filter(path=>/^word\/footer\d+\.xml$/.test(path));
-  const target=YANDEX_RATING_URL.replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-  for(const footerPath of footerPaths){
-    const footer=zip.file(footerPath);
-    if(!footer)continue;
-    let xml=await footer.async("string");
-    if(xml.includes("rIdYandexRating"))continue;
-    const docPr=/<wp:docPr\b([^>]*)\/>/;
-    if(!docPr.test(xml))continue;
-    xml=xml.replace(docPr,'<wp:docPr$1><a:hlinkClick xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rIdYandexRating"/></wp:docPr>');
-    zip.file(footerPath,xml);
-    const relsPath=footerPath.replace(/^word\//,"word/_rels/")+".rels";
-    const relsFile=zip.file(relsPath);
-    if(!relsFile)continue;
-    let rels=await relsFile.async("string");
-    if(!rels.includes("rIdYandexRating")){
-      rels=rels.replace("</Relationships>",'<Relationship Id="rIdYandexRating" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="'+target+'" TargetMode="External"/></Relationships>');
-      zip.file(relsPath,rels);
-    }
-  }
-  return zip.generateAsync({type:"blob",compression:"DEFLATE"});
-}
-
 async function downloadDOCX(){
 
   const b=document.getElementById("downloadDocxBtn");
@@ -1311,9 +1288,7 @@ async function downloadDOCX(){
 
   try{
 
-    const rawBlob=await createDocx();
-
-    const blob=await addRatingImageHyperlink(rawBlob);
+    const blob=await createDocx();
 
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");

@@ -625,7 +625,7 @@ async function createDocx(){
   }
 
   async function ratingBadgePng(){
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="840" height="270" viewBox="0 0 840 270"><rect x="0" y="0" width="840" height="270" rx="135" fill="#fff"/><polygon points="160,42 185,105 252,110 199,150 216,216 160,177 104,216 121,150 68,110 135,105" fill="#ffc21a" stroke="#ec9b00" stroke-width="4"/><text x="304" y="116" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#202124"><tspan fill="#e31d1c">Я</tspan>ндекс 4.9</text><text x="307" y="160" font-family="Arial,sans-serif" font-size="38" fill="#ffad00">★★★★★</text><text x="307" y="197" font-family="Arial,sans-serif" font-size="24" fill="#666">Рейтинг на Яндекс Картах</text></svg>`;
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="840" height="270" viewBox="0 0 840 270"><rect x="0" y="0" width="840" height="270" rx="135" fill="#fff"/><polygon points="178,42 203,105 270,110 217,150 234,216 178,177 122,216 139,150 86,110 153,105" fill="#ffc21a" stroke="#ec9b00" stroke-width="4"/><text x="322" y="116" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#202124"><tspan fill="#e31d1c">Я</tspan>ндекс 4.9</text><text x="325" y="160" font-family="Arial,sans-serif" font-size="38" fill="#ffad00">★★★★★</text><text x="325" y="197" font-family="Arial,sans-serif" font-size="24" fill="#666">Рейтинг на Яндекс Картах</text></svg>`;
     const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
     try{
       const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url});
@@ -1149,7 +1149,7 @@ async function createDocx(){
   ];
 
   const footerRating=[
-    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",transformation:{width:180,height:54}})],{alignment:docx.AlignmentType.CENTER,after:0})
+    paragraph([new docx.ImageRun({data:await ratingBadgePng(),type:"png",link:YANDEX_RATING_URL,transformation:{width:180,height:54}})],{alignment:docx.AlignmentType.CENTER,after:0})
   ];
 
   const footerRight=[];
